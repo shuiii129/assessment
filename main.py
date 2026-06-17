@@ -5,6 +5,7 @@ import uvicorn
 import chromadb
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel
 
 try:
@@ -133,18 +134,25 @@ def handle_status():
             message=f"Error connecting to vector store: {str(e)}"
         )
 
-# Serve Frontend static assets from api/public/ folder (or public/ fallback)
-current_dir = os.path.dirname(os.path.abspath(__file__))
-public_dir = os.path.join(current_dir, "api", "public")
-if not os.path.exists(public_dir):
-    public_dir = os.path.join(current_dir, "public")
+# Serve Frontend static assets inlined
+try:
+    from api.static_assets import INDEX_HTML, STYLE_CSS, APP_JS
+except ImportError:
+    INDEX_HTML = "<h1>Static Assets Missing</h1><p>Please ensure api/static_assets.py exists.</p>"
+    STYLE_CSS = ""
+    APP_JS = ""
 
-if os.path.exists(public_dir):
-    app.mount("/", StaticFiles(directory=public_dir, html=True), name="public")
-else:
-    @app.get("/")
-    def read_root():
-        return {"status": "backend operational", "message": "Please ensure api/public/ directory contains index.html"}
+@app.get("/")
+def read_root():
+    return HTMLResponse(content=INDEX_HTML)
+
+@app.get("/style.css")
+def read_style():
+    return Response(content=STYLE_CSS, media_type="text/css")
+
+@app.get("/app.js")
+def read_js():
+    return Response(content=APP_JS, media_type="application/javascript")
 
 # CLI Parse arguments
 def parse_args():
