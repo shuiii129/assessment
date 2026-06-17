@@ -104,7 +104,7 @@ U.S. AI research capacity.
 ### 4. Run Web Application (Desktop & Mobile)
 Launch the local web server to interact with a responsive chat dashboard interface:
 ```bash
-python app.py
+python main.py
 ```
 Open **`http://127.0.0.1:8000`** in your browser.
 - Displays database status (pulsing badge showing how many chunks are loaded).
