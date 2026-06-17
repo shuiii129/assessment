@@ -189,7 +189,22 @@ def ingest_documents(
         # If we are on Vercel or ephemeral mode is forced via environment
         if os.environ.get("VERCEL") == "1" or os.environ.get("CHROMA_EPHEMERAL") == "true":
             if os.path.exists(resolved_db_path):
-                chroma_client = chromadb.PersistentClient(path=resolved_db_path)
+                if os.environ.get("VERCEL") == "1":
+                    import shutil
+                    tmp_db_path = "/tmp/chroma_db"
+                    if not os.path.exists(tmp_db_path):
+                        try:
+                            shutil.copytree(resolved_db_path, tmp_db_path)
+                        except Exception as e:
+                            print(f"Warning: Failed to copy database to /tmp: {e}")
+                            tmp_db_path = None
+                    
+                    if tmp_db_path:
+                        chroma_client = chromadb.PersistentClient(path=tmp_db_path)
+                    else:
+                        chroma_client = chromadb.EphemeralClient()
+                else:
+                    chroma_client = chromadb.PersistentClient(path=resolved_db_path)
             else:
                 chroma_client = chromadb.EphemeralClient()
         else:

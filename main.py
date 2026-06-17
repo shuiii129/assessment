@@ -79,38 +79,57 @@ def handle_status():
     """
     current_dir = os.path.dirname(os.path.abspath(__file__))
     db_path = os.path.join(current_dir, "chroma_db")
+    resolved_db_path = os.path.abspath(db_path)
     
-    if not os.path.exists(db_path):
+    # Check Vercel environment
+    is_vercel = os.environ.get("VERCEL") == "1"
+    effective_db_path = resolved_db_path
+    
+    if is_vercel:
+        effective_db_path = "/tmp/chroma_db"
+        if not os.path.exists(effective_db_path) and os.path.exists(resolved_db_path):
+            import shutil
+            try:
+                shutil.copytree(resolved_db_path, effective_db_path)
+            except Exception as e:
+                return StatusResponse(
+                    connected=False,
+                    indexed_chunks=0,
+                    db_path=resolved_db_path,
+                    message=f"Failed to copy database to /tmp: {str(e)}"
+                )
+    
+    if not os.path.exists(effective_db_path):
         return StatusResponse(
             connected=False,
             indexed_chunks=0,
-            db_path=db_path,
+            db_path=resolved_db_path,
             message="Vector database not found. Ephemeral mock fallback mode active."
         )
         
     try:
-        chroma_client = chromadb.PersistentClient(path=db_path)
+        chroma_client = chromadb.PersistentClient(path=effective_db_path)
         try:
             collection = chroma_client.get_collection(name="documents")
             count = collection.count()
             return StatusResponse(
                 connected=True,
                 indexed_chunks=count,
-                db_path=db_path,
+                db_path=resolved_db_path,
                 message="Vector store successfully loaded and ready."
             )
         except Exception:
             return StatusResponse(
                 connected=True,
                 indexed_chunks=0,
-                db_path=db_path,
+                db_path=resolved_db_path,
                 message="Vector store connected but collection 'documents' is empty."
             )
     except Exception as e:
         return StatusResponse(
             connected=False,
             indexed_chunks=0,
-            db_path=db_path,
+            db_path=resolved_db_path,
             message=f"Error connecting to vector store: {str(e)}"
         )
 
