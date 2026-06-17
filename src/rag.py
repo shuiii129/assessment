@@ -39,7 +39,8 @@ def query_rag_system(
     db_path: str = "./chroma_db", 
     model: str = "gemini-2.5-flash",
     embed_model: str = "gemini-embedding-001",
-    api_key: str = None
+    api_key: str = None,
+    ephemeral: bool = False
 ) -> tuple[str, list[dict]]:
     """
     Given a user query, embeds it with Gemini, searches the local ChromaDB index
@@ -53,8 +54,24 @@ def query_rag_system(
     # Initialize the google-genai Client
     client = genai.Client(api_key=resolved_api_key)
     
-    # Initialize ChromaDB client and retrieve the collection
-    chroma_client = chromadb.PersistentClient(path=db_path)
+    # Initialize ChromaDB client dynamically
+    if ephemeral:
+        chroma_client = chromadb.EphemeralClient()
+    else:
+        # Resolve path robustly relative to root
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        root_dir = os.path.dirname(current_dir)
+        resolved_db_path = os.path.abspath(db_path) if os.path.isabs(db_path) else os.path.join(root_dir, db_path)
+        
+        # If we are on Vercel or ephemeral mode is forced via environment
+        if os.environ.get("VERCEL") == "1" or os.environ.get("CHROMA_EPHEMERAL") == "true":
+            if os.path.exists(resolved_db_path):
+                chroma_client = chromadb.PersistentClient(path=resolved_db_path)
+            else:
+                chroma_client = chromadb.EphemeralClient()
+        else:
+            chroma_client = chromadb.PersistentClient(path=resolved_db_path)
+            
     try:
         collection = chroma_client.get_collection(name="documents")
     except Exception as e:

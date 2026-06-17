@@ -146,12 +146,13 @@ def get_data_dir() -> str:
 
 def ingest_documents(
     limit: int = None, 
-    chunk_size: int = 800, 
-    chunk_overlap: int = 80, 
+    chunk_size: int = 500, 
+    chunk_overlap: int = 50, 
     db_path: str = "./chroma_db",
     embed_model: str = "gemini-embedding-001",
     data_dir: str = None,
-    api_key: str = None
+    api_key: str = None,
+    ephemeral: bool = False
 ):
     """
     Main ingestion function. Loads metadata, reads text files, chunks content,
@@ -176,8 +177,24 @@ def ingest_documents(
     metadata_map = load_metadata(data_dir)
     print(f"Loaded metadata for {len(metadata_map)} documents.")
     
-    # Initialize ChromaDB client
-    chroma_client = chromadb.PersistentClient(path=db_path)
+    # Initialize ChromaDB client dynamically
+    if ephemeral:
+        chroma_client = chromadb.EphemeralClient()
+    else:
+        # Resolve path robustly relative to root
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        root_dir = os.path.dirname(current_dir)
+        resolved_db_path = os.path.abspath(db_path) if os.path.isabs(db_path) else os.path.join(root_dir, db_path)
+        
+        # If we are on Vercel or ephemeral mode is forced via environment
+        if os.environ.get("VERCEL") == "1" or os.environ.get("CHROMA_EPHEMERAL") == "true":
+            if os.path.exists(resolved_db_path):
+                chroma_client = chromadb.PersistentClient(path=resolved_db_path)
+            else:
+                chroma_client = chromadb.EphemeralClient()
+        else:
+            chroma_client = chromadb.PersistentClient(path=resolved_db_path)
+            
     collection = chroma_client.get_or_create_collection(name="documents")
     
     # Check already ingested documents for incremental ingestion
