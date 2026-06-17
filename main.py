@@ -133,15 +133,18 @@ def handle_status():
             message=f"Error connecting to vector store: {str(e)}"
         )
 
-# Serve Frontend static assets from public/ folder
+# Serve Frontend static assets from api/public/ folder (or public/ fallback)
 current_dir = os.path.dirname(os.path.abspath(__file__))
-public_dir = os.path.join(current_dir, "public")
+public_dir = os.path.join(current_dir, "api", "public")
+if not os.path.exists(public_dir):
+    public_dir = os.path.join(current_dir, "public")
+
 if os.path.exists(public_dir):
     app.mount("/", StaticFiles(directory=public_dir, html=True), name="public")
 else:
     @app.get("/")
     def read_root():
-        return {"status": "backend operational", "message": "Please ensure public/ directory contains index.html"}
+        return {"status": "backend operational", "message": "Please ensure api/public/ directory contains index.html"}
 
 # CLI Parse arguments
 def parse_args():
