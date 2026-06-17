@@ -1,0 +1,17 @@
+# Python virtual environments & packages
+.venv/
+venv/
+ENV/
+env/
+*.pyc
+__pycache__/
+
+# Private keys / Secrets
+.env
+
+# Local IDE folders
+.vscode/
+.idea/
+
+# DO NOT ignore chroma_db/ since Vercel needs to bundle it for read-only RAG queries
+!chroma_db/

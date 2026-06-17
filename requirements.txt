@@ -1,0 +1,6 @@
+google-genai>=0.1.1
+chromadb>=0.4.0
+pandas>=1.5.0
+tqdm
+fastapi
+uvicorn
