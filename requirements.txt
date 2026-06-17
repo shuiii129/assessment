@@ -4,3 +4,5 @@ pandas>=1.5.0
 tqdm
 fastapi
 uvicorn
+pysqlite3-binary
+
