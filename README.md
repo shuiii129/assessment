@@ -4,7 +4,7 @@ This is a clean, production-ready Retrieval-Augmented Generation (RAG) system bu
 
 ---
 
-## 🏗️ High-Level Architecture
+##  High-Level Architecture
 
 The system follows a modular, pipeline-based architecture utilizing native Python functions and avoids heavy orchestrators (like LangChain or LlamaIndex) for maximum transparency, control, and performance.
 
@@ -26,7 +26,7 @@ graph TD
 
 ---
 
-## 🛠️ Key Technical Decisions
+##  Key Technical Decisions
 
 ### 1. Ingestion & Chunking Strategy (`src/ingest.py`)
 - **Word-Boundary Preservation**: Character-based chunking (~800 characters) with a sliding-window overlap of 10% (~80 characters). When splitting text, the algorithm scans backward up to 10% of the chunk size to find a space or newline, preventing word clipping or cutting mid-sentence.
@@ -46,7 +46,7 @@ graph TD
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Setup Environment
 Clone the repository and install the dependencies:
@@ -114,7 +114,7 @@ Open **`http://127.0.0.1:8000`** in your browser.
 
 ---
 
-## 🧪 Verification & Unit Tests
+##  Verification & Unit Tests
 Verify correctness of the code and mock the Gemini API offline:
 ```bash
 python test_rag.py
@@ -122,7 +122,7 @@ python test_rag.py
 
 ---
 
-## ⚖️ Engineering Trade-Offs & Future Scalability
+##  Engineering Trade-Offs & Future Scalability
 
 ### Trade-offs Made
 1. **Character-based vs. Semantic Chunking**: character-based sliding-windows with boundary detection are fast, deterministic, and lightweight. Semantic chunking (which groups based on sentence embedding shifts) is superior for cohesive context but would add considerable ingestion latency and API costs.
